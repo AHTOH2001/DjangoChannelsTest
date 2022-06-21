@@ -8,6 +8,7 @@ authors = ["AHTOH_mac <antonlapytko@gmail.com>"]
 python = "^3.9"
 channels = "^3.0.4"
 channels-redis = "^3.4.0"
+selenium = "^4.2.0"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.6.0"
