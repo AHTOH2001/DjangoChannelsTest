@@ -1,18 +1,24 @@
+import socket
+
 from channels.testing import ChannelsLiveServerTestCase
 from selenium import webdriver
+from django.test import override_settings
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.wait import WebDriverWait
 
 
+@override_settings(ALLOWED_HOSTS=['*'])  # Disable ALLOW_HOSTS
 class ChatTests(ChannelsLiveServerTestCase):
     serve_static = True  # emulate StaticLiveServerTestCase
+    host = '0.0.0.0'
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         try:
-            # NOTE: Requires "chromedriver" binary to be installed in $PATH
-            cls.driver = webdriver.Chrome()
+            cls.host = socket.gethostbyname(socket.gethostname())
+            cls.driver = webdriver.Remote('http://selenium:4444/wd/hub', DesiredCapabilities.CHROME)
         except:
             super().tearDownClass()
             raise
@@ -67,24 +73,25 @@ class ChatTests(ChannelsLiveServerTestCase):
     # === Utility ===
 
     def _enter_chat_room(self, room_name):
-        self.driver.get(self.live_server_url + '/chat/')
+        url = f'{self.live_server_url}/chat/'        
+        self.driver.get(url)        
         ActionChains(self.driver).send_keys(room_name + '\n').perform()
         WebDriverWait(self.driver, 2).until(lambda _:
                                             room_name in self.driver.current_url)
 
     def _open_new_window(self):
         self.driver.execute_script('window.open("about:blank", "_blank");')
-        self.driver.switch_to_window(self.driver.window_handles[-1])
+        self.driver.switch_to.window(self.driver.window_handles[-1])
 
     def _close_all_new_windows(self):
         while len(self.driver.window_handles) > 1:
-            self.driver.switch_to_window(self.driver.window_handles[-1])
+            self.driver.switch_to.window(self.driver.window_handles[-1])
             self.driver.execute_script('window.close();')
         if len(self.driver.window_handles) == 1:
-            self.driver.switch_to_window(self.driver.window_handles[0])
+            self.driver.switch_to.window(self.driver.window_handles[0])
 
     def _switch_to_window(self, window_index):
-        self.driver.switch_to_window(self.driver.window_handles[window_index])
+        self.driver.switch_to.window(self.driver.window_handles[window_index])
 
     def _post_message(self, message):
         ActionChains(self.driver).send_keys(message + '\n').perform()
